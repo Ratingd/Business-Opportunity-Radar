@@ -1,0 +1,21 @@
+{
+  "enable": true,
+  "time1": "09:09",
+  "time2": "",
+  "websites": [
+    "ceec"
+  ],
+  "keywords": [
+    "广东省电信规划设计院有限公司",
+    "华信咨询设计研究院有限公司",
+    "中讯邮电咨询设计院有限公司",
+    "生态环境部华南环境科学研究所"
+  ],
+  "email_config": {
+    "receiver": "13929506172@139.com",
+    "sender": "13929506172@139.com",
+    "password": "095820282db77e4c8200",
+    "smtp_server": "smtp.139.com",
+    "smtp_port": 465
+  }
+}
