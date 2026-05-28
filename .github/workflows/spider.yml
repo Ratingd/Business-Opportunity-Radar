@@ -1,0 +1,34 @@
+name: Business Opportunity Radar Crawler
+
+on:
+  schedule:
+    # 每天早上 8:00 运行 (北京时间 8:00 = UTC 0:00)
+    - cron: '0 0 * * *'
+  workflow_dispatch: # 允许在网页上手动点击运行
+
+jobs:
+  run-crawler:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install Dependencies
+      run: |
+        cd backend
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        playwright install chromium
+
+    - name: Run Crawler and Send Feishu Message
+      env:
+        FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
+      run: |
+        cd backend
+        python run_github_actions.py
