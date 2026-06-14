@@ -46,7 +46,7 @@ def print(*args, **kwargs):
 
 
 # 默认关键词（当未传入关键词时使用）
-DEFAULT_KEYWORDS = ["智算", "算力网络", "核心网", "业务网", "数据网", "承载网", "骨干网", "IP网", "5G", "服务器", "集成", "算力中心", "IDC", "通信工程", "勘察设计", "工程监理", "DICT", "数智化", "信息化", "智慧校园", "智慧医疗", "公安视频", "数字政府", "云影像", "云平台", "网络安全", "绿色能源", "信息能源", "规划", "项目咨询", "运维服务", "专网", "造价评估", "方案审核", "通信网络", "机房建设", "数据中心", "弱电工程", "安防监控", "智慧园区", "智能化改造", "系统运维", "通信设计", "可行性研究"]
+DEFAULT_KEYWORDS = ["智算", "算力网络", "核心网", "业务网", "数据网", "承载网", "骨干网", "IP网", "5G", "服务器", "集成", "算力", "IDC", "通信工程", "勘察设计", "工程监理", "DICT", "数智化", "信息化", "智慧校园", "智慧医疗", "公安视频", "数字政府", "云影像", "云平台", "网络安全", "绿色能源", "信息能源", "规划", "项目咨询", "运维服务", "专网", "造价评估", "方案审核", "通信网络", "机房建设", "数据中心", "弱电工程", "安防监控", "智慧园区", "智能化改造", "系统运维", "通信设计", "可行性研究"]
 
 # 当前使用的关键词（会被传入的关键词覆盖）
 KEYWORDS = DEFAULT_KEYWORDS.copy()
@@ -95,6 +95,9 @@ def process_bidding(db: Session, title: str, content: str, url: str, publish_dat
     print(f"Analyzing: {title}...", flush=True)
     text_content = clean_html(content)
     analysis = analyze_bidding(title, text_content[:10000])
+    
+    # 记录命中的关键词
+    analysis['matched_keywords'] = [kw for kw in KEYWORDS if kw in title]
     
     score = analysis.get('score', 0)
     print(f"Score: {score}", flush=True)
@@ -1046,6 +1049,7 @@ def crawl_cmcc(db: Session, context):
                     from app.services.ai_service import analyze_bidding
                     analysis = analyze_bidding(title, title)  # 使用标题作为内容进行分析
                     if analysis:
+                        analysis['matched_keywords'] = [kw for kw in KEYWORDS if kw in title]
                         new_bidding.ai_score = analysis.get('score', 50)
                         new_bidding.category = analysis.get('category', '未分类')
                         new_bidding.content_abstract = analysis.get('summary', new_bidding.content_abstract)[:500]
@@ -1199,6 +1203,7 @@ def crawl_chinatelecom(db: Session, context):
                     from app.services.ai_service import analyze_bidding
                     analysis = analyze_bidding(title, title)
                     if analysis:
+                        analysis['matched_keywords'] = [kw for kw in KEYWORDS if kw in title]
                         new_bidding.ai_score = analysis.get('score', 50)
                         new_bidding.category = analysis.get('category', '未分类')
                         new_bidding.content_abstract = analysis.get('summary', new_bidding.content_abstract)[:500]
