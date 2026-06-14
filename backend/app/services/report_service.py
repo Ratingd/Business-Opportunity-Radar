@@ -132,10 +132,18 @@ def generate_feishu_markdown(biddings):
     
     for i, b in enumerate(biddings[:20], 1):  # 最多显示20条避免超出长度限制
         pub_date = b.publish_date.strftime('%Y-%m-%d') if b.publish_date else '未知'
+        
+        # 提取匹配的关键词
+        matched_kws_str = ""
+        if b.meta_info and isinstance(b.meta_info, dict) and 'matched_keywords' in b.meta_info:
+            kws = b.meta_info['matched_keywords']
+            if kws:
+                matched_kws_str = f"\n- **命中关键词**: <font color=\"blue\">{'、'.join(kws)}</font>"
+
         md_text += f"""**{i}. {b.title}**
 - **来源**: {b.source_website}
 - **评分**: <font color="red">**{b.ai_score}分**</font>
-- **日期**: {pub_date}
+- **日期**: {pub_date}{matched_kws_str}
 
 **项目简报**: 
 {b.content_abstract or "暂无"}
