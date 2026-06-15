@@ -667,7 +667,11 @@ def run_crawler_task_for_websites(db: Session, websites: list = None, keywords: 
     # 记录爬虫开始前的最大商机 ID，用于极其精准地过滤出本次新抓取的商机
     # 彻底避开 SQLite 时间精度丢失和时区差异带来的 Bug
     max_id_record = db.query(func.max(models.Bidding.bid_id)).first()
+    # 当手动运行时（非 GitHub Actions 时）或者第一次运行时，也需要一个基准线
     max_bid_id_before_task = max_id_record[0] if max_id_record and max_id_record[0] else 0
+    # 将此 ID 强行写入一个临时环境变量或文件，确保推送时用的是同一个
+    import os
+    os.environ["CURRENT_TASK_MAX_ID"] = str(max_bid_id_before_task)
     
     # 默认爬取所有网站
     if websites is None or len(websites) == 0:
@@ -772,9 +776,12 @@ def run_crawler_task_for_websites(db: Session, websites: list = None, keywords: 
             from app.services.report_service import generate_excel_bytes, generate_word_bytes, generate_email_html, generate_feishu_markdown, send_feishu_message
             from app.services.email_service import send_report_email
             
+            # 从环境变量中取回任务开始前记录的最大 ID
+            actual_max_id = int(os.environ.get("CURRENT_TASK_MAX_ID", max_bid_id_before_task))
+            
             # 获取本次爬取到的数据
             biddings_for_push = db.query(models.Bidding)\
-                .filter(models.Bidding.bid_id > max_bid_id_before_task)\
+                .filter(models.Bidding.bid_id > actual_max_id)\
                 .filter(models.Bidding.ai_score >= 80)\
                 .order_by(models.Bidding.ai_score.desc())\
                 .limit(100).all()
