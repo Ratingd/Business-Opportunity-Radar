@@ -883,6 +883,7 @@ def crawl_chinatower(db: Session, context):
                     href = item['href']
                     if not href.startswith('http'):
                         href = urllib.parse.urljoin("https://ebid.chinatowercom.cn/zgtt/gggs/003001/", href)
+                    # 避免在不同行业的循环中抓取到重复的铁塔公告
                     if not any(x['href'] == href for x in captured_items):
                         captured_items.append({"title": item['title'], "href": href})
                 
@@ -906,6 +907,17 @@ def crawl_chinatower(db: Session, context):
                 if any(kw in title for kw in KEYWORDS):
                     existing = db.query(models.Bidding).filter(models.Bidding.source_url == url).first()
                     if existing:
+                        # 对于铁塔网站，增加一个强校验，防止 URL 变更导致重复抓取
+                        print(f"  Skipping existing (URL matched): {title}", flush=True)
+                        continue
+                    
+                    # 铁塔网站公告标题极易重复，通过标题和发布日期进行二次查重
+                    existing_by_title = db.query(models.Bidding).filter(
+                        models.Bidding.title == title,
+                        models.Bidding.source_website == "中国铁塔采购平台"
+                    ).first()
+                    if existing_by_title:
+                        print(f"  Skipping existing (Title matched): {title}", flush=True)
                         continue
                         
                     try:
